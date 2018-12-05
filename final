@@ -1,0 +1,695 @@
+#!/bin/bash 
+#set -x
+#############check data type############################3
+check( ) {
+mmn=`cut -d: -f$ii ${tableee}.const`
+u=`echo notnull`
+if [ $mmn == $u ]
+then
+h=`echo null`
+mmm=`cut -d: -f$ii ${tableee}.type`
+if [[ $mmm == mix ]]
+then
+if [[ $r =~ ^[[:alpha:]]*$  && $r == $h ]]
+then
+mm=`echo num `
+elif [[ $r =~ ^[[:alpha:]]*$ ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:digit:]]*$ ]]
+then
+mm=`echo num`
+elif [[ $r =~ ^[[:alnum:]]*$ ]]
+then
+mm=`echo mix`
+fi
+elif [[ $mmm == num ]]
+then
+if [[ $r =~ ^[[:alpha:]]*$  && $r == $h ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:alpha:]]*$ ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:digit:]]*$ ]]
+then
+mm=`echo num`
+elif [[ $r =~ ^[[:alnum:]]*$ ]]
+then
+mm=`echo mix`
+fi
+else 
+if [[ $r =~ ^[[:alpha:]]*$  && $r == $h ]]
+then
+mm=`echo num `
+elif [[ $r =~ ^[[:alpha:]]*$ ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:digit:]]*$ ]]
+then
+mm=`echo num`
+elif [[ $r =~ ^[[:alnum:]]*$ ]]
+then
+mm=`echo mix`
+fi
+
+fi
+else
+mmm=`cut -d: -f$ii ${tableee}.type`
+if [[ $mmm == alpha ]]
+then
+if [[ $r =~ ^[[:alpha:]]*$ ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:digit:]]*$ ]]
+then
+mm=`echo num`
+elif [[ $r =~ ^[[:alnum:]]*$ ]]
+then
+mm=`echo mix`
+fi
+elif [[ $mmm == num ]]
+then
+if [[ $r =~ ^[[:digit:]]*$ || $r == null ]]
+then
+mm=`echo num`
+elif [[ $r =~ ^[[:alpha:]]*$ ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:alnum:]]*$ ]]
+then
+mm=`echo mix`
+fi
+elif [[ $mmm == mix ]]
+then
+if [[ $r =~ ^[[:alpha:]]*$ && $r != null ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:digit:]]*$ ]]
+then
+mm=`echo num`
+elif [[ $r =~ ^[[:alnum:]]*$ || $r == null ]]
+then
+mm=`echo mix`
+fi
+fi
+fi
+
+}
+########create database #####################################
+create( ) {
+cd ~
+RED='\033[0;31m'
+NC='\033[0m'
+Blue='\033[0;34m'
+echo -e "${Blue} Enter data base name${NC}."
+read database
+if test -e $database 
+then 
+cd $database
+else 
+mkdir $database
+cd $database
+fi 
+#####create a table ##################
+echo -e  "${Blue}Enter table name: ${NC}"
+read table
+if test -e $table
+then
+echo -e  "${RED}this table already exists ${NC}."
+else
+touch $table 
+############data entry ###############################
+echo -e "${Blue} how many fields you will enter ${NC} "
+read i 
+################# Primary key field #################
+echo -e "${Blue} enter the P.k field ${NC}"
+read pk 
+echo ${pk}: > $table 
+echo pk: > ${table}.const
+echo -e "${Blue}choose the data type of P.k ${NC} "
+PS3=">>"
+select datatype in numerical  alphabtic  Mix  
+do
+case $datatype in  
+numerical)echo num:  > ${table}.type
+break ;;
+alphabtic)echo alpha: > ${table}.type 
+break ;;
+Mix)echo mix: > ${table}.type
+break ;;
+*) echo -e "${RED} wrong entry ${NC} " ;;
+esac 
+done 
+##################### the rest of the fields #########
+for ((ii=1;ii<$i ; ii++))
+do 
+echo -e "${Blue} enter the next field ${NC} " 
+read field 
+echo `sed "s/:$/:$field:/g" $table` > $table 
+
+#////////////////////////////////////////////////
+echo -e "${Blue} enter the data type ${NC}"
+select datatype in numerical  alphabtic  Mix
+do
+case $datatype in
+numerical)echo ` sed  's/:$/:num:/' ${table}.type ` > ${table}.type
+break ;;
+alphabtic)echo ` sed  's/:$/:alpha:/' ${table}.type ` > ${table}.type
+break ;;
+Mix)echo ` sed  's/:$/:mix:/' ${table}.type ` > ${table}.type
+break ;;
+*) echo -e "${RED} wrong entry ${NC} " ;;
+esac
+done
+#////////////////////////////////////////////////////////////
+echo -e "${Blue} choose the field to be null or not ${NC}"
+select ddd in Null Not_Null 
+do
+case $ddd in 
+Null)echo ` sed  's/:$/:null:/' ${table}.const ` > ${table}.const
+break ;;
+Not_Null)echo ` sed  's/:$/:notnull:/' ${table}.const` >${table}.const
+break ;;
+*) echo -e "${RED} wrong entry ${NC} " ;;
+esac 
+done 
+#/////////////////////////////////////////////////////////////
+done
+fi
+sed -i 's/:$//' $table
+PS3="please choose a number from the list"
+}
+##################(#Drop table)###############################################
+drop( ) { 
+RED='\033[0;31m'
+NC='\033[0m'
+Blue='\033[0;34m'
+cd ~
+echo -e "${Blue}which data base ?${NC} "
+read databasee
+if test -e $databasee
+then
+cd $databasee
+echo -e "${Blue} which table you want to delete ${NC}"
+read tablee
+if test -e $tablee 
+then 
+echo -e "${RED}Are you sure you want to permentaly delete this table !${NC} "
+PS3=" choose Yes or No "
+select xy in Yes No 
+do 
+case $xy in 
+Yes) rm -r $tablee  
+     rm -r $tablee.type 
+     rm -r $tablee.const
+     break ;;
+No) break ;; 
+*) echo -e "${RED} wrong entry !!${NC} " ;;
+esac
+done 
+else 
+echo -e "${RED} There isn't any table with that name${NC} "
+fi 
+else 
+echo -e "${RED} data base doesn't exist ${NC}"
+fi
+PS3="please choose a number from the list"
+}
+######################### alter #########################################
+alter( ) {
+RED='\033[0;31m'
+NC='\033[0m'
+Blue='\033[0;34m'
+cd ~
+echo -e "${Blue}which data base ?${NC} "
+read databasee
+if test -e $databasee
+then
+cd $databasee
+echo -e "${Blue} which table you want to alter${NC}"
+read tableee
+if test -e $tableee
+then
+PS3="choose an option" 
+#//////////////////////////////////////////////////////////////////////////////
+#v=`awk -F: '{print NR; exit}' $tableee `
+#u=`cut -d: -f$v $tableee | sed -n '1p' `
+#sed -i "s/$u/$u:/" $tableee
+
+select aaa in   Add_column Add_columns Drop_column  
+do 
+case $aaa in 
+Add_column) echo -e "${Blue} enter the field you want to add ${NC} " 
+read fieldd
+v=`awk -F: '{print NF; exit}' $tableee `
+u=`cut -d: -f$v $tableee | sed -n '1p' `
+sed -i "s/$u/$u:/" $tableee
+sed -i "s/:$/:$fieldd:/" $tableee
+
+#////////////////////////////////////////////////
+echo -e "${Blue} enter the data type ${NC}"
+select datatype in numerical  alphabtic  Mix
+do
+case $datatype in
+numerical)echo ` sed  's/:$/:num:/' ${tableee}.type ` > ${tableee}.type
+break ;;
+alphabtic)echo ` sed  's/:$/:alpha:/' ${tableee}.type ` > ${tableee}.type
+break ;;
+Mix)echo ` sed  's/:$/:mix:/' ${tableee}.type ` > ${tableee}.type
+break ;;
+*) echo -e "${RED} wrong entry ${NC} " ;;
+esac
+done
+#///////////////////////////////////////////////////////
+echo -e "${Blue} choose the field to be null or not ${NC}"
+select ddd in Null Not_Null
+do
+case $ddd in
+Null)echo ` sed  's/:$/:null:/' ${tableee}.const ` > ${tableee}.const
+break ;;
+Not_Null)echo ` sed  's/:$/:notnull:/' ${tableee}.const ` > ${tableee}.const
+break ;;
+*) echo -e "${RED} wrong entry ${NC} " ;;
+esac
+done
+break ;;  
+#////////////////////////////////////////////////////////////////////
+Add_columns) echo -e "${Blue} how many fields you will enter ${NC} "
+read i
+v=`awk -F: '{print NF; exit}' $tableee `
+u=`cut -d: -f$v $tableee | sed -n '1p' `
+sed -i "s/$u/$u:/" $tableee
+for ((ii=0;ii<$i ; ii++))
+do
+echo -e "${Blue} enter the field number $(($ii+1))   ${NC} " 
+read field
+sed -i "s/:$/:$field:/g" $tableee 
+
+#////////////////////////////////////////////////
+echo -e "${Blue} enter the data type ${NC}"
+select datatype in numerical  alphabtic  Mix
+do
+case $datatype in
+numerical)echo ` sed  's/:$/:num:/' ${tableee}.type ` > ${tableee}.type
+break ;;
+alphabtic)echo ` sed  's/:$/:alpha:/' ${tableee}.type ` > ${tableee}.type
+break ;;
+Mix)echo ` sed  's/:$/:mix:/' ${tableee}.type ` > ${tableee}.type
+break ;;
+*) echo -e "${RED} wrong entry ${NC} " ;;
+esac
+done
+#////////////////////////////////////////////////////////////
+echo -e "${Blue} choose the field to be null or not ${NC}"
+select ddd in Null Not_Null
+do
+case $ddd in
+Null)echo ` sed  's/:$/:null:/' ${tableee}.const ` > ${tableee}.const
+break ;;
+Not_Null)echo ` sed  's/:$/:notnull:/' ${tableee}.const` >${tableee}.const
+break ;;
+*) echo -e "${RED} wrong entry ${NC} " ;;
+esac
+done
+done
+break ;; 
+#/////////////////////////////////////////////////////////////////////
+Drop_column)
+sed -i 's/:$//' $tableee
+
+echo -e "${Blue} enter the number of the column you want to drop ${NC}"
+sed -n '1p' $tableee
+read xy 
+if [ $xy -eq 1 ]
+then 
+echo -e "${RED} can't delete primary key field ${NC} "
+else
+v=`awk -F: '{print NF; exit}' $tableee `
+if [ $xy -le $v ]
+then
+c=`wc -l $tableee | cut -d" " -f1`
+
+for((i=1;i<=$c ; i++))
+do
+y=$(cut -d: -f$xy  $tableee | sed -n "$i p")
+sed -i "s/:$y//" $tableee
+done 
+y=$(cut -d: -f$xy  $tableee.type | sed -n '1p')
+sed -i "s/:$y//" $tableee.type <  $tableee.type
+y=$(cut -d: -f$xy  $tableee.const | sed -n '1p')
+sed -i "s/:$y//" $tableee.const <  $tableee.const
+else 
+echo -e "${RED} wrong entry ${NC}"
+fi
+fi 
+break ;;
+#///////////////////////////////////////////////////////////////////
+*) echo -e "${RED} wrong entry !! ${NC} " ;;
+esac 
+done 
+else
+echo -e "${RED} There isn't any table with that name${NC} "
+fi
+else
+echo -e "${RED} data base doesn't exist ${NC}"
+fi
+sed -i 's/:$//' $tableee
+
+PS3="please choose a number from the list"
+}
+############################ truncate ##########################################
+truncate( ) {
+RED='\033[0;31m'
+NC='\033[0m'
+Blue='\033[0;34m'
+cd ~
+echo -e "${Blue}which data base ?${NC} "
+read databasee
+if test -e $databasee
+then
+cd $databasee
+echo -e "${Blue} which table you want to truncate${NC}"
+read tableee
+if test -e $tableee
+then
+echo -e "${RED}Are you sure you want to permentaly delete content of this table !${NC} "
+PS3=" choose Yes or No "
+select xy in Yes No
+do
+case $xy in
+Yes) echo `sed -n '1p' $tableee `> $tableee 
+echo `sed -n '1p' ${tableee}.type `> ${tableee}.type
+echo `sed -n '1p' ${tableee}.type `> ${tableee}.type
+break ;; 
+No) break ;;
+*) echo -e "${RED} wrong entry !!${NC} " ;;
+esac
+done
+else
+echo -e "${RED} There isn't any table with that name${NC} "
+fi
+else
+echo -e  "${RED} data base doesn't exist${NC}"
+fi
+PS3="please choose a number from the list"
+}
+############################### Display table #########################################
+display( ){
+RED='\033[0;31m'
+NC='\033[0m'
+Blue='\033[0;34m'
+cd ~
+echo -e "${Blue}which data base ?${NC} "
+read databasee
+if test -e $databasee
+then
+cd $databasee
+echo -e "${Blue} which table you want to display ${NC}"
+read tableee
+if test -e $tableee
+then
+column -t -s: $tableee 
+else
+echo -e "${RED} There isn't any table with that name${NC} "
+fi
+else
+echo -e  "${RED} data base doesn't exist${NC}"
+fi
+}
+########################## Insert###################################################
+insert( ){
+RED='\033[0;31m'
+NC='\033[0m'
+Blue='\033[0;34m'
+cd ~
+echo -e "${Blue}which data base ?${NC} "
+read databasee
+if test -e $databasee
+then
+cd $databasee
+echo -e "${Blue} which table you want to insert into  ${NC}"
+read tableee
+if test -e $tableee
+then
+sed -n '1p' $tableee 
+echo -e "${RED} for null fields please enter null ${NC}"
+v=`awk -F: '{print NF; exit}' $tableee`
+for ((ii=1;ii<=$v ; ii++))
+do
+x=`cut -d: -f$ii $tableee | sed -n '1p'`
+echo " enter $x"
+if [ $ii -eq 1 ]
+then 
+read r
+if [[ $r =~ ^[[:alpha:]]*$ ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:digit:]]*$ ]]
+then
+mm=`echo num`
+elif [[ $r =~ ^[[:alnum:]]*$ ]]
+then
+mm=`echo mix`
+fi
+
+mmm=`cut -d: -f$ii ${tableee}.type`
+h=`echo null` 
+while ( test $mm != $mmm -o $r == $h )  
+do
+echo -e "${RED} wrong entry enter again ${NC} "
+read r
+if [[ $r =~ ^[[:alpha:]]*$ ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:digit:]]*$ ]]
+then
+mm=`echo num`
+elif [[ $r =~ ^[[:alnum:]]*$ ]]
+then
+mm=`echo mix`
+fi
+done 
+
+while ( cut -d: -f1 $tableee | grep $r || test $mm != $mmm || test $r == $h ) >/dev/null
+do
+echo -e "${RED} wrong entry the value already exist ..please re enter it ${NC}" 
+read r 
+if [[ $r =~ ^[[:alpha:]]*$ ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:digit:]]*$ ]]
+then
+mm=`echo num`
+elif [[ $r =~ ^[[:alnum:]]*$ ]]
+then
+mm=`echo mix`
+fi
+
+done
+echo ${r}: >> $tableee
+#///////////////////////////////////////////////////////
+else 
+read r
+check 
+mmm=`cut -d: -f$ii ${tableee}.type`
+while ( test $mm != $mmm  )  
+do
+echo -e "${RED} wrong entry enter again ${NC} "
+read r 
+check
+done 
+sed -i  "s/:$/:$r:/g" $tableee
+fi 
+done
+else
+echo -e  "${RED} There isn't any table with that name${NC} "
+fi
+else
+echo -e  "${RED} data base doesn't exist${NC}"
+fi
+sed -i 's/:$//' $tableee
+}
+########################### update table###################
+update( ){
+RED='\033[0;31m'
+NC='\033[0m'
+Blue='\033[0;34m'
+cd ~
+echo -e "${Blue}which data base ?${NC} "
+read databasee
+if test -e $databasee
+then
+cd $databasee
+echo -e "${Blue} which table you want to update ${NC}"
+read tableee
+if test -e $tableee
+then
+sed -n '1p' $tableee
+echo -e "${Blue} enter the primary key of the record you want to update ${NC}"
+read e
+until ( grep $e $tableee) 
+do 
+echo -e "${RED} this pk doesn't exist ${NC}"
+read e
+done
+echo -e "${Blue} enter the number of column you want to update ${NC}"
+v=`awk -F: '{print NF; exit}' $tableee `
+read xy
+if [ $xy -le $v ]
+then
+y=$(grep $e $tableee | cut -d: -f$xy )
+echo -e "${Blue} enter the new value ${NC}"
+read r
+if [ $xy -eq 1 ]
+then
+if [[ $r =~ ^[[:alpha:]]*$ ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:digit:]]*$ ]]
+then
+mm=`echo num`
+elif [[ $r =~ ^[[:alnum:]]*$ ]]
+then
+mm=`echo mix`
+fi
+mmm=`cut -d: -f$xy ${tableee}.type`
+h=`echo null`
+while ( test $mm != $mmm -o $r == $h )  
+do
+echo -e "${RED} wrong entry enter again ${NC} "
+read r
+if [[ $r =~ ^[[:alpha:]]*$ ]]
+then
+mm=`echo alpha `
+elif [[ $r =~ ^[[:digit:]]*$ ]]
+then
+mm=`echo num`
+elif [[ $r =~ ^[[:alnum:]]*$ ]]
+then
+mm=`echo mix`
+fi
+done
+
+while (cut -d: -f1 $tableee | grep $r) >/dev/null
+do
+echo -e "${RED} wrong entry thi value already exist ..please re enter it ${NC}" 
+read r
+done
+sed -i "s/$y/$r/" $tableee 
+
+else 
+ii=`echo $xy`
+check
+mmm=`cut -d: -f$xy ${tableee}.type`
+while ( test $mm != $mmm  )  
+do
+echo -e "${RED} wrong entry enter again ${NC} "
+read r
+check
+done
+
+grep -n "$e" $tableee > number
+s=`cut -d: -f1 number `
+sed -i  "$s s/:$y/:$r/" $tableee
+
+sed -i 's/:$//' $tableee
+
+fi
+fi
+else
+echo -e "${RED} There isn't any table with that name ${NC} "
+fi
+else
+echo -e  "${RED} data base doesn't exist ${NC}"
+fi 
+}
+######################## Delete record ################################
+delete( ) {
+RED='\033[0;31m'
+NC='\033[0m'
+Blue='\033[0;34m'
+cd ~
+echo -e "${Blue}which data base ?${NC} "
+read databasee
+if test -e $databasee
+then
+cd $databasee
+echo -e "${Blue}enter the table name ${NC}"
+read tableee
+if test -e $tableee
+then
+sed -n '1p' $tableee
+echo -e "${Blue} enter the primary key of the record you want to delete ${NC}"
+read e
+until ( grep $e $tableee) 
+do
+echo -e "${RED} this pk doesn't exist ${NC}"
+read e
+done
+grep -n "$e" $tableee > number
+x=`cut -d: -f1 number`
+#echo -e "${RED} the field you deleted was ${NC}"
+sed -i "$x d" $tableee
+
+else
+echo -e "${RED} There isn't any table with that name ${NC} "
+fi
+else
+echo -e  "${RED} data base doesn't exist ${NC}"
+fi
+}
+###################search#############################################
+search( ) {
+RED='\033[0;31m'
+NC='\033[0m'
+Blue='\033[0;34m'
+cd ~
+echo -e "${Blue}which data base ?${NC} "
+read databasee
+if test -e $databasee
+then
+cd $databasee
+echo -e "${Blue}enter the table name ${NC}"
+read tableee
+if test -e $tableee
+then
+sed -n '1p' $tableee
+echo -e "${Blue} enter the pattern you are looking for ${NC}"
+read e
+until ( grep $e $tableee) 
+do
+echo -e "${RED} this pattern doesn't exist ${NC}"
+read e
+done
+
+else
+echo -e "${RED} There isn't any table with that name ${NC} "
+fi
+else
+echo -e  "${RED} data base doesn't exist ${NC}"
+fi
+}
+
+#########################################################################################
+############################################################################
+PS3="please choose a number from the list"
+select xxx in create_table Alter_table Insert_record Delete_record Search Display Update Drop Truncate Exit
+do
+case $xxx in
+create_table) create ;;
+Alter_table) alter ;;
+Insert_record) insert ;;
+Delete_record) delete;;
+Search) search ;;
+Display) display ;;
+Update) update ;;
+Drop) drop ;;
+Truncate) truncate ;;
+Exit) break ;;
+*)RED='\033[0;31m' 
+NC='\033[0m'
+echo -e "${RED}wrong entry ${NC}" ;;
+esac
+done
+########################################################################################################################
